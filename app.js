@@ -16,7 +16,7 @@ for (var i=0; i<a*b;i++) {
     initialBoard.push(1);
   }
 }
-console.log("init:",initialBoard);
+//console.log("init:",initialBoard);
 
 class Menu extends React.Component {
   render() {
@@ -37,32 +37,18 @@ class Board extends React.Component {
 
 
 class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {boardToShow: initialBoard};
-  }
-  changeBoard = (e) => {
-    e.preventDefault();
-    console.log(e.target.value);
-     generate();
-    boardToSend=[];
-    this.setState({
-      boardToShow: boardNextGeneration
-    });
-    boardNextGeneration=[];
-  }
   render() {
-      console.log("app :", this.state.boardToShow);
+    var boardToShow = this.props.newBoard;
+    //console.log(boardToShow);
       for (var i=0; i<a*b; i++) {
         var cellStatus;
-        if (this.state.boardToShow[i]===1) cellStatus="living cell";
-        if (this.state.boardToShow[i]===0) cellStatus = "dead cell";
+        if (boardToShow[i]===1) cellStatus="living cell";
+        if (boardToShow[i]===0) cellStatus = "dead cell";
         var elementToPush = <div className={cellStatus} id={i} key={i} >{i}</div>;
         boardToSend.push(elementToPush);
-        board.push(this.state.boardToShow[i]);
+        board.push(boardToShow[i]);
       }
-      //console.log(boardToSend);
-      console.log("b   :",board);
+      //console.log("b   :",board);
     return (
       <div className="box">
         <Menu changingBoard={this.changeBoard}/>
@@ -76,21 +62,11 @@ function generate() {
 //console.log("gen :", board);
 
 function newCell(n,s) {
-  if (s===0 && n !== 3) {
-    boardNextGeneration.push(0);    //nothing
-  }
-  if (s===0 && n === 3) {
-    boardNextGeneration.push(1);    // born
-  }
-  if (s===1 && n <2 ) {
-    boardNextGeneration.push(0);    // dead-underpopulation
-  }
-  if (s===1 && (n===2 || n===3)) {
-    boardNextGeneration.push(1);    // still lives
-  }
-  if (s===1 && n>3 )  {
-    boardNextGeneration.push(0);    // dead-overpopulation
-  }
+  if (s===0 && n !== 3) { boardNextGeneration.push(0); }    //nothing
+  if (s===0 && n === 3) { boardNextGeneration.push(1); }    // born
+  if (s===1 && n <2 )   { boardNextGeneration.push(0); }   // dead-underpopulation
+  if (s===1 && (n===2 || n===3)) { boardNextGeneration.push(1); }   // still lives
+  if (s===1 && n>3 )  { boardNextGeneration.push(0); }    // dead-overpopulation
 }
 
 for (var i=0; i<a*b; i++) {
@@ -208,6 +184,17 @@ for (var i=0; i<a*b; i++) {
   }
 }
 //return console.log(boardNextGeneration);
-board=[];
+
 }
-ReactDOM.render(<App />, app);
+
+function tick() {
+    generate();
+    board=[];
+    ReactDOM.render(<App newBoard={boardNextGeneration} />, app);
+    boardToSend=[];
+    boardNextGeneration=[];
+}
+
+ReactDOM.render(<App newBoard={initialBoard} />, app);
+boardToSend=[];
+setInterval(tick, 1000);
