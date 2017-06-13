@@ -1,7 +1,7 @@
 var app = document.getElementById('app');
 var startBtn = document.getElementById('startBtn');
 var stopBtn = document.getElementById('stopBtn');
-var boardWidth = 30;
+var boardWidth = 20;
 var boardHeight = 15;
 var a = boardWidth;
 var b = boardHeight;
@@ -11,6 +11,7 @@ var boardToSend=[];
 var initialBoard=[];
 var gameStatus = false;
 var intervalID;
+var generations=0;
 
 for (var i=0; i<a*b;i++) {
   var random = Math.floor(Math.random()*100+1);
@@ -50,6 +51,7 @@ class Menu extends React.Component {
         <button type="button" className="btn" onClick={this.gaemeStarts} >Start</button>
         <button type="button" className="btn" onClick={this.gameStops} >Stop</button>
         <button type="button" className="btn" onClick={this.gameReset} >Reset</button>
+        <div className="description">Generations: {generations}</div>
       </div>
     );
   }
@@ -233,6 +235,7 @@ function tick() {
     generate();
     board=[];
     ReactDOM.render(<App newBoard={boardNextGeneration} />, app);
+    generations++;
     boardNextGeneration=[];
 }
 
@@ -245,4 +248,5 @@ function emptyBoard() {
 
 ReactDOM.render(<App newBoard={initialBoard} />, app);
 gameStatus = true;
+generations++;
 intervalID = setInterval(tick, 1000);

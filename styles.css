@@ -17,7 +17,9 @@
   height: 60px;
   outline: 1px dashed red;
 }
-
+.description {
+  display: inline-block;
+}
 .cell {
   display: inline-block;
   width: 30px;
