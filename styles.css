@@ -6,19 +6,24 @@
 }
 .wrapper {
   margin: 0 auto;
-  width:600px;
+  width:900px;
 }
 
 #app {
   background-color: silver;
 }
+.btn {
+  width: 100px;
+  height: 60px;
+  outline: 1px dashed red;
+}
 
 .cell {
   display: inline-block;
-  width: 60px;
-  height: 60px;
-  line-height: 60px;
-  font-size:20px;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  font-size:12px;
   text-align: center;
 }
 .living {
