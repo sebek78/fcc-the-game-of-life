@@ -37,11 +37,19 @@ class Menu extends React.Component {
         console.log("stop");
     }
   }
+  gameReset() {
+      clearInterval(intervalID);
+      gameStatus = false;
+      board=[];
+      console.log("reset");
+      emptyBoard();
+  }
   render() {
     return (
       <div className="menu">
-        <button type="button" className="btn" onClick={this.gaemeStarts} id="startBtn">Start</button>
-        <button type="button" className="btn" onClick={this.gameStops} id="stopBtn" >Stop</button>
+        <button type="button" className="btn" onClick={this.gaemeStarts} >Start</button>
+        <button type="button" className="btn" onClick={this.gameStops} >Stop</button>
+        <button type="button" className="btn" onClick={this.gameReset} >Reset</button>
       </div>
     );
   }
@@ -60,6 +68,7 @@ class Board extends React.Component {
 class App extends React.Component {
   render() {
     var boardToShow = this.props.newBoard;
+    boardToSend=[];
     //console.log(boardToShow);
       for (var i=0; i<a*b; i++) {
         var cellStatus;
@@ -72,7 +81,7 @@ class App extends React.Component {
       //console.log("b   :",board);
     return (
       <div className="box">
-        <Menu changingBoard={this.changeBoard}/>
+        <Menu />
         <Board board={boardToSend} />
       </div>
     );
@@ -212,11 +221,16 @@ function tick() {
     generate();
     board=[];
     ReactDOM.render(<App newBoard={boardNextGeneration} />, app);
-    boardToSend=[];
     boardNextGeneration=[];
 }
 
+function emptyBoard() {
+  for (var i=0; i<a*b;i++) {
+    board.push(0);
+  }
+  ReactDOM.render(<App newBoard={board} />, app);
+}
+
 ReactDOM.render(<App newBoard={initialBoard} />, app);
-boardToSend=[];
 gameStatus = true;
 intervalID = setInterval(tick, 1000);
