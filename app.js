@@ -56,10 +56,22 @@ class Menu extends React.Component {
 }
 
 class Board extends React.Component {
+  changeCell(e) {
+    if (gameStatus===false) {
+      console.log(e.target.id);
+      var cellID = e.target.id;
+      if (board[cellID]===1) {
+        board[cellID]=0;
+      } else {
+        board[cellID]=1;
+      }
+      ReactDOM.render(<App newBoard={board} />, app);
+    }
+  }
   render () {
     var cells = this.props.board;
     return (
-      <div className="board">{cells}</div>
+      <div className="board" onClick={this.changeCell}>{cells}</div>
     );
   }
 }
