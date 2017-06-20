@@ -6,31 +6,67 @@
 }
 .wrapper {
   margin: 0 auto;
-  width:900px;
+  width:710px;
 }
-
-#app {
-  background-color: silver;
+.box {
+  margin-top: 5px;
+}
+.menu {
+  border: 5px solid black;
+  padding: 10px;
+  background-color: lightblue;
+  font-family: monospace;
+  margin-bottom: 10px;
+  position: relative;
 }
 .btn {
   width: 100px;
   height: 60px;
-  outline: 1px dashed red;
+  background-color: lightblue;
+  border: 5px solid green;
+  border-radius: 10px;
+  margin-right: 10px;
+  font-size: 24px;
+  outline: 0;
+  text-transform: uppercase;
+}
+.btn:hover {
+  background-color: green;
+  cursor: pointer;;
 }
 .description {
-  display: inline-block;
+  position: absolute;
+  width: 300px;
+  height: 60px;
+  top: 10px;
+  right: 35px;
+  font-size: 24px;
+  text-align: center;
+  background-color: lightblue;
+}
+.board {
+  width: 710px;
+  height: 510px;
+  border: 5px solid black;
 }
 .cell {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  line-height: 30px;
-  font-size:12px;
+  float:left;
+  width: 10px;
+  height: 10px;
+  font-size:6px;
   text-align: center;
+  border: 1px solid #80ffd4;
 }
 .living {
   background-color: green;
 }
 .dead {
   background-color: lightblue;
+}
+.footer {
+  font-family: monospace;
+  font-size: 14px;
+  text-align: center;
+  color: silver;
+  padding-top: 5px;
 }
