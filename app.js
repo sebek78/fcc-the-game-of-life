@@ -1,6 +1,4 @@
 var app = document.getElementById('app');
-var startBtn = document.getElementById('startBtn');
-var stopBtn = document.getElementById('stopBtn');
 var boardWidth = 70;
 var boardHeight = 50;
 var a = boardWidth;
@@ -11,7 +9,6 @@ var boardToSend=[];
 var initialBoard=[];
 var gameStatus = false;
 var intervalID;
-var generations=0;
 
 for (var i=0; i<a*b;i++) {
   var random = Math.floor(Math.random()*100+1);
@@ -22,41 +19,36 @@ for (var i=0; i<a*b;i++) {
   }
 }
 
-class Menu extends React.Component {
-  gaemeStarts() {
-    if (gameStatus===false) {
-        intervalID = setInterval(tick, 333);
-        gameStatus = true;
-        console.log("start");
-    }
-  }
-  gameStops() {
-    if (gameStatus===true) {
-        clearInterval(intervalID);
-        gameStatus = false;
-        console.log("stop");
-    }
-  }
-  gameReset() {
-      clearInterval(intervalID);
-      gameStatus = false;
-      board=[];
-      console.log("reset");
-      emptyBoard();
-  }
-  render() {
+class Board extends React.Component {
+  render () {
+    var cells = this.props.board;
     return (
-      <div className="menu">
-        <button type="button" className="btn" onClick={this.gaemeStarts} >Start</button>
-        <button type="button" className="btn" onClick={this.gameStops} >Stop</button>
-        <button type="button" className="btn" onClick={this.gameReset} >Clear</button>
-        <div className="description">Game of Life <br />Generations: {generations}</div>
+      <div>
+        <div className="menu">
+          <button type="button" className="btn" onClick={this.props.gameContinue} >Start</button>
+          <button type="button" className="btn" onClick={this.props.stop} >Stop</button>
+          <button type="button" className="btn" onClick={this.props.reset} >Clear</button>
+          <div className="description">Game of Life <br />Generations: {this.props.generation}</div>
+        </div>
+          <div className="board" onClick={this.props.changeCell}>{cells}</div>
       </div>
     );
   }
 }
 
-class Board extends React.Component {
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      board: initialBoard,
+      generations: 0
+    }
+    this.gameContinue = this.gameContinue.bind(this);
+    this.gameStops = this.gameStops.bind(this);
+    this.gameReset = this.gameReset.bind(this);
+    this.changeCell = this.changeCell.bind(this);
+  }
+
   changeCell(e) {
     if (gameStatus===false) {
       console.log(e.target.id);
@@ -66,21 +58,61 @@ class Board extends React.Component {
       } else {
         board[cellID]=1;
       }
-      ReactDOM.render(<App newBoard={board} />, app);
+      this.setState({board: board})
     }
   }
-  render () {
-    var cells = this.props.board;
-    return (
-      <div className="board" onClick={this.changeCell}>{cells}</div>
-    );
+
+  gameContinue(){
+    if (gameStatus===false) {
+        gameStatus = true;
+        console.log("start");
+        intervalID = setInterval(() => this.tick(), 333);
+    }
   }
-}
 
+  gameStops() {
+    if (gameStatus===true) {
+        clearInterval(intervalID);
+        gameStatus = false;
+        console.log("stop");
+    }
+  }
 
-class App extends React.Component {
+  gameReset() {
+      clearInterval(intervalID);
+      gameStatus = false;
+      board=[];
+      console.log("reset");
+      for (var i=0; i<a*b;i++) {
+        board.push(0);
+      }
+      let emptyBoard = board;
+      const clearGenerations = 0;
+      this.setState({ board: emptyBoard,
+        generations: clearGenerations });
+  }
+
+  tick() {
+      generate();
+      board=[];
+      let newGeneration = this.state.generations + 1;
+      this.setState({
+        board: boardNextGeneration,
+        generations: newGeneration
+      });
+      boardNextGeneration=[];
+  }
+
+  componentDidMount() {
+    intervalID = setInterval(() => this.tick(), 333);
+  }
+
+  componentWillUnmount() {
+    clearInterval(intervalID);
+  }
+
   render() {
-    var boardToShow = this.props.newBoard;
+    var boardToShow = this.state.board;
     boardToSend=[];
       for (var i=0; i<a*b; i++) {
         var cellStatus;
@@ -92,14 +124,12 @@ class App extends React.Component {
       }
     return (
       <div className="box">
-        <Menu />
-        <Board board={boardToSend} />
+        <Board board={boardToSend} generation={this.state.generations} gameContinue={this.gameContinue}
+        stop={this.gameStops} reset={this.gameReset} changeCell={this.changeCell} />
       </div>
     );
   }
 }
-
-function generate() {
 
 function newCell(n,s) {
   if (s===0 && n !== 3) { boardNextGeneration.push(0); }    //nothing
@@ -109,127 +139,111 @@ function newCell(n,s) {
   if (s===1 && n>3 )  { boardNextGeneration.push(0); }    // dead-overpopulation
 }
 
-for (var i=0; i<a*b; i++) {
-  var neighborhood=0;
-  if (i===0) {                                  // board: top-left corner
-    if(board[ (i-a)+(a*b)   ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)+(a*b) ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a) + a   ] === 1) neighborhood++; //SW
-    if(board[ (i-1)+a       ] === 1) neighborhood++; //W
-    if(board[ (i-1)+(a*b)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
+function generate() {
+  for (var i=0; i<a*b; i++) {
+    var neighborhood=0;
+    if (i===0) {                                  // board: top-left corner
+      if(board[ (i-a)+(a*b)   ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)+(a*b) ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a) + a   ] === 1) neighborhood++; //SW
+      if(board[ (i-1)+a       ] === 1) neighborhood++; //W
+      if(board[ (i-1)+(a*b)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i>0 && i < a-1) {                    // first(top) row without corners
+      if(board[ (i-a)+(a*b)   ] === 1) neighborhood++; //N direction for this cell
+      if(board[ i+1+(a*(b-1)) ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)       ] === 1) neighborhood++; //SW
+      if(board[ (i-1)         ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)+(a*b) ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i===a-1) {                           //top-rigth corner
+      if(board[ (i-a)+(a*b)    ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)+(a*b)-a ] === 1) neighborhood++; //NE
+      if(board[ i+1-a           ] === 1) neighborhood++; //E
+      if(board[ i+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)+(a*b)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if ((i+1)%a===0 && i!==a-1 && i!==((a*b)-1)) { //right column without corners
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)-a        ] === 1) neighborhood++; //NE
+      if(board[ i+1 -a          ] === 1) neighborhood++; //E
+      if(board[ i+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i===((a*b)-1)) {                         //bottom-rigth corner
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)-a        ] === 1) neighborhood++; //NE
+      if(board[ i+1-a          ] === 1) neighborhood++; //E
+      if(board[ i+1 - (a*b)         ] === 1) neighborhood++; //SE
+      if(board[ i+a  -(a*b)         ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)-(a*b)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i<((a*b)-1) && i >((a*b)-a)) {           //last(bottom) row without corners
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1-(a*b)    ] === 1) neighborhood++; //SE
+      if(board[ i+a -(a*b)          ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)-(a*b)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i===((a*b)-a)) {                         // bottom-left corner
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1-(a*b)         ] === 1) neighborhood++; //SE
+      if(board[ i+a-(a*b)           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)-((b-1)*a)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)+a       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)+a   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
+    else if (i%a===0 && i!==0 && i!==((a*b)-a)) {     // left column without cornerns
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)+a    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)+a       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)+a   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+      //console.log("Lcol:",i,neighborhood,board[i]);
+    }
+    else {                                            // board: inner cells
+      if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
+      if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
+      if(board[ i+1           ] === 1) neighborhood++; //E
+      if(board[ i+a+1         ] === 1) neighborhood++; //SE
+      if(board[ i+a           ] === 1) neighborhood++; //S
+      if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
+      if(board[ (i-1)       ] === 1) neighborhood++; //W
+      if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
+      newCell(neighborhood,board[i]);
+    }
   }
-  else if (i>0 && i < a-1) {                    // first(top) row without corners
-    if(board[ (i-a)+(a*b)   ] === 1) neighborhood++; //N direction for this cell
-    if(board[ i+1+(a*(b-1)) ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)       ] === 1) neighborhood++; //SW
-    if(board[ (i-1)         ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)+(a*b) ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if (i===a-1) {                           //top-rigth corner
-    if(board[ (i-a)+(a*b)    ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)+(a*b)-a ] === 1) neighborhood++; //NE
-    if(board[ i+1-a           ] === 1) neighborhood++; //E
-    if(board[ i+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)+(a*b)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if ((i+1)%a===0 && i!==a-1 && i!==((a*b)-1)) { //right column without corners
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)-a        ] === 1) neighborhood++; //NE
-    if(board[ i+1 -a          ] === 1) neighborhood++; //E
-    if(board[ i+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if (i===((a*b)-1)) {                         //bottom-rigth corner
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)-a        ] === 1) neighborhood++; //NE
-    if(board[ i+1-a          ] === 1) neighborhood++; //E
-    if(board[ i+1 - (a*b)         ] === 1) neighborhood++; //SE
-    if(board[ i+a  -(a*b)         ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)-(a*b)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if (i<((a*b)-1) && i >((a*b)-a)) {           //last(bottom) row without corners
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1-(a*b)    ] === 1) neighborhood++; //SE
-    if(board[ i+a -(a*b)          ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)-(a*b)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if (i===((a*b)-a)) {                         // bottom-left corner
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1-(a*b)         ] === 1) neighborhood++; //SE
-    if(board[ i+a-(a*b)           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)-((b-1)*a)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)+a       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)+a   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-  else if (i%a===0 && i!==0 && i!==((a*b)-a)) {     // left column without cornerns
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)+a    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)+a       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)+a   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-    //console.log("Lcol:",i,neighborhood,board[i]);
-  }
-  else {                                            // board: inner cells
-    if(board[ (i-a)          ] === 1) neighborhood++; //N direction for this cell
-    if(board[ (i-a+1)        ] === 1) neighborhood++; //NE
-    if(board[ i+1           ] === 1) neighborhood++; //E
-    if(board[ i+a+1         ] === 1) neighborhood++; //SE
-    if(board[ i+a           ] === 1) neighborhood++; //S
-    if(board[ (i-1+a)    ] === 1) neighborhood++; //SW
-    if(board[ (i-1)       ] === 1) neighborhood++; //W
-    if(board[ (i-1-a)   ] === 1) neighborhood++; //NW
-    newCell(neighborhood,board[i]);
-  }
-}
-}
-
-function tick() {
-    generate();
-    board=[];
-    ReactDOM.render(<App newBoard={boardNextGeneration} />, app);
-    generations++;
-    boardNextGeneration=[];
 }
 
-function emptyBoard() {
-  for (var i=0; i<a*b;i++) {
-    board.push(0);
-  }
-  ReactDOM.render(<App newBoard={board} />, app);
-}
-
-ReactDOM.render(<App newBoard={initialBoard} />, app);
+ReactDOM.render(<App />, app);
 gameStatus = true;
-generations++;
-intervalID = setInterval(tick, 333);
