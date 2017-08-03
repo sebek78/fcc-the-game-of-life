@@ -7,7 +7,7 @@ var board = [];
 var boardNextGeneration=[];
 var boardToSend=[];
 var initialBoard=[];
-var gameStatus = false;
+// var gameStatus = false;
 var intervalID;
 
 for (var i=0; i<a*b;i++) {
@@ -41,7 +41,8 @@ class App extends React.Component {
     super(props);
     this.state = {
       board: initialBoard,
-      generations: 0
+      generations: 0,
+      status: true //false = simulation stopped
     }
     this.gameContinue = this.gameContinue.bind(this);
     this.gameStops = this.gameStops.bind(this);
@@ -50,7 +51,7 @@ class App extends React.Component {
   }
 
   changeCell(e) {
-    if (gameStatus===false) {
+    if (this.state.status===false) {
       console.log(e.target.id);
       var cellID = e.target.id;
       if (board[cellID]===1) {
@@ -63,24 +64,28 @@ class App extends React.Component {
   }
 
   gameContinue(){
-    if (gameStatus===false) {
-        gameStatus = true;
+    if (this.state.status===false) {
         console.log("start");
         intervalID = setInterval(() => this.tick(), 333);
+        this.setState({
+          status: true
+        });
     }
   }
 
   gameStops() {
-    if (gameStatus===true) {
+
+    if (this.state.status===true) {
         clearInterval(intervalID);
-        gameStatus = false;
         console.log("stop");
+        this.setState({
+          status: false
+        })
     }
   }
 
   gameReset() {
       clearInterval(intervalID);
-      gameStatus = false;
       board=[];
       console.log("reset");
       for (var i=0; i<a*b;i++) {
@@ -89,7 +94,7 @@ class App extends React.Component {
       let emptyBoard = board;
       const clearGenerations = 0;
       this.setState({ board: emptyBoard,
-        generations: clearGenerations });
+        generations: clearGenerations, status: false });
   }
 
   tick() {
@@ -246,4 +251,4 @@ function generate() {
 }
 
 ReactDOM.render(<App />, app);
-gameStatus = true;
+//gameStatus = true;
